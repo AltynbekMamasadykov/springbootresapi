@@ -1,14 +1,18 @@
 package peaksoft.springbootresapi.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import peaksoft.springbootresapi.dto.StudentRequest;
 import peaksoft.springbootresapi.dto.StudentResponse;
+import peaksoft.springbootresapi.dto.StudentResponseView;
 import peaksoft.springbootresapi.entity.Student;
 import peaksoft.springbootresapi.mapper.StudentEditMapper;
 import peaksoft.springbootresapi.mapper.StudentViewMapper;
 import peaksoft.springbootresapi.repository.StudentRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -43,7 +47,28 @@ public class StudentService {
         return viewMapper.viewStudent(student);
     }
 
-    public List<StudentResponse> getAllStudents(){
-        return viewMapper.view(repository.findAll());
+//    public List<StudentResponse> getAllStudents(){
+//        return viewMapper.view(repository.findAll());
+//    }
+
+    public StudentResponseView getAllStudentsPagination(String text,int page,int size){
+        StudentResponseView studentResponseView = new StudentResponseView();
+        Pageable pageable = PageRequest.of(page, size);
+        studentResponseView.setResponseList(view(search(text,pageable)));
+        return studentResponseView;
     }
+
+    public List<StudentResponse> view(List<Student> students){
+        List<StudentResponse> studentResponses = new ArrayList<>();
+        for (Student student: students) {
+            studentResponses.add(viewMapper.viewStudent(student));
+        }
+        return studentResponses;
+    }
+
+    private List<Student> search(String name, Pageable pageable){
+        String text = name == null ? "" : name;
+        return repository.searchAndPagination(text.toUpperCase(),pageable);
+    }
+
 }
